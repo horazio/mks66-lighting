@@ -25,18 +25,16 @@ def get_lighting(normal, view, ambient, light, areflect, dreflect, sreflect ):
     color = calculate_ambient(ambient, areflect)
 
     dcolor = calculate_diffuse(light, dreflect, normal)
+    scolor = calculate_specular(light, sreflect, view, normal)
 
-    color[0] += dcolor[0]
-    color[1] += dcolor[1]
-    color[2] += dcolor[2]
+    color[0] += dcolor[0] + scolor[0]
+    color[1] += dcolor[1] + scolor[1]
+    color[2] += dcolor[2] + scolor[2]
     color = limit_color(color)
 
     color[0] = int(color[0])
     color[1] = int(color[1])
     color[2] = int(color[2])
-    print dcolor[0]
-    print dcolor[1]
-    print dcolor[2]
     return color
 
 def calculate_ambient(alight, areflect):
@@ -62,13 +60,23 @@ def calculate_specular(light, sreflect, view, normal):
     normalize(normal)
     normalize(light[0])
     normalize(view)
-    color[0] = light[1][0] * sreflect[0] * dot_product(normal, light[0])
+    P = [0,0,0]
+    P[0] = (dot_product(normal, light[0]) * normal[0])
+    P[1] = (dot_product(normal, light[0]) * normal[1])
+    P[2] = (dot_product(normal, light[0]) * normal[2])
 
-    ((dot_product(normal, light[0]) * normal[0] * 2) - light[0][0])
+    R = [0,0,0]
+    R[0] = (2 * P[0]) - light[0][0]
+    R[1] = (2 * P[1]) - light[0][1]
+    R[2] = (2 * P[2]) - light[0][2]
+
+    R = limit_color(R)
+
+    color[0] = light[1][0] * sreflect[0] * (dot_product(R, view) ** SPECULAR_EXP)
+    color[1] = light[1][1] * sreflect[1] * (dot_product(R, view) ** SPECULAR_EXP)
+    color[2] = light[1][2] * sreflect[2] * (dot_product(R, view) ** SPECULAR_EXP)
 
 
-    color[1] = light[1][1] * sreflect[1] * dot_product(normal, light[0])
-    color[2] = light[1][2] * sreflect[2] * dot_product(normal, light[0])
     color = limit_color(color)
     return color
 
